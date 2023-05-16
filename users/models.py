@@ -1,0 +1,32 @@
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+from barber_shop.models import Company
+
+# Create your models here.
+class UserProfile(AbstractUser):
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+    username = models.CharField(max_length=40, null=True, blank=True)
+    owner_company = models.ForeignKey(Company, related_name="distributor_user", verbose_name="Gerente de", on_delete=models.SET_NULL, blank=True, null=True)
+    full_name = models.CharField("Nome Completo", max_length=512, blank=True, null=True)
+    email = models.EmailField('E-mail', unique=True)
+    token_google = models.TextField('Token', default='', max_length=500)
+    
+
+    groups = models.ManyToManyField(
+        "auth.Group",
+        related_name="user_profiles",
+        blank=True,
+        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+        verbose_name="groups",
+    )
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        related_name="user_profiles",
+        blank=True,
+        help_text="Specific permissions for this user.",
+        verbose_name="user permissions",
+    )
+
+    def __str__(self):
+        return self.username  
