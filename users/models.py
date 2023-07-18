@@ -3,10 +3,17 @@ from django.contrib.auth.models import AbstractUser
 from barber_shop.models import Company
 
 # Create your models here.
+TYPE_USER = (
+    ('cliente', 'Cliente'),
+    ('barbeiro', 'Barbeiro')
+)
+
+
 class UserProfile(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-    username = models.CharField(max_length=40, null=True, blank=True)
+    username = models.CharField('Nome', max_length=40, null=True, blank=True)
+    type = models.CharField('Tipo do usuário', choices=TYPE_USER, max_length=50, default='')
     owner_company = models.ForeignKey(Company, related_name="distributor_user", verbose_name="Gerente de", on_delete=models.SET_NULL, blank=True, null=True)
     full_name = models.CharField("Nome Completo", max_length=512, blank=True, null=True)
     email = models.EmailField('E-mail', unique=True)
