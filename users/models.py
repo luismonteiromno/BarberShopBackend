@@ -15,6 +15,7 @@ class UserProfile(AbstractUser):
     username = models.CharField('Nome', max_length=40, null=True, blank=True)
     type = models.CharField('Tipo do usuário', choices=TYPE_USER, max_length=50, default='')
     owner_company = models.ForeignKey(Company, related_name="distributor_user", verbose_name="Gerente de", on_delete=models.SET_NULL, blank=True, null=True)
+    owner = models.BooleanField('Dono de alguma barbearia?', default=False)
     full_name = models.CharField("Nome Completo", max_length=512, blank=True, null=True)
     email = models.EmailField('E-mail', unique=True)
     token_google = models.TextField('Token', default='', max_length=500)

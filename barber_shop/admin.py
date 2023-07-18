@@ -4,7 +4,7 @@ from .models import Company, Schedules
 
 class CompanyAdmin(admin.ModelAdmin):
     fieldsets = (
-         ('Informações de Contato', {'fields': ('name', 'phone', 'instagram_link', 'facebook_link')}),
+         ('Informações de Contato', {'fields': ('owner', 'name', 'phone', 'instagram_link', 'facebook_link')}),
          ('Informações de Endereço', {'fields': ('cep', 'state', 'city', 'neighborhood', 'street')}),
          ('Horário', {'fields': ('business_hours',)}),
                  )
