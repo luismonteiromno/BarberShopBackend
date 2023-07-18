@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-import os, environ
+import environ
+import os
 from pathlib import Path
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(DEBUG=(bool, True))
@@ -33,6 +36,14 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+
+sentry_sdk.init(
+  dsn="https://2c25d47a3e554852a7281c6970cbbeea@o4505370953187328.ingest.sentry.io/4505551360491520",
+  integrations=[DjangoIntegration()],
+  traces_sample_rate=1.0,
+  send_default_pii=True
+)
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,7 +56,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'users',
-    'barber_shop'
+    'barber_shop',
 ]
 
 MIDDLEWARE = [
@@ -63,7 +74,7 @@ ROOT_URLCONF = 'barbershop.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import ValidationError
 
+
 try:
     from django.db.models import JSONField
 except ImportError:
@@ -47,3 +48,16 @@ class Company(models.Model):
     class Meta:
         verbose_name = "Barbearia"
         verbose_name_plural = "Barbearias"
+
+
+class Schedules(models.Model):
+    client = models.ForeignKey('users.UserProfile', verbose_name='Cliente', related_name='client_schedules', on_delete=models.CASCADE)
+    date = models.DateTimeField('Horário agendado')
+    confirmed_by_barber = models.BooleanField('Agendamento confirmado pelo barbeiro?', default=True)
+
+    def __str__(self):
+        return str(self.client)
+
+    class Meta:
+        verbose_name = 'Agendamento'
+        verbose_name_plural = 'Agendamentos'
