@@ -18,6 +18,8 @@ class UserProfile(AbstractUser):
     owner = models.BooleanField('Dono de alguma barbearia?', default=False)
     full_name = models.CharField("Nome Completo", max_length=512, blank=True, null=True)
     email = models.EmailField('E-mail', unique=True)
+    image = models.ImageField('Foto de perfil', blank=True, null=True)
+    description = models.TextField('Descrição de usuário', max_length=500, default='')
     token_google = models.TextField('Token', default='', max_length=500)
     
 
