@@ -4,13 +4,12 @@ from .models import Company, Schedules
 
 class CompanyAdmin(admin.ModelAdmin):
     fieldsets = (
-         ('Informações de Contato', {'fields': ('owner', 'name', 'phone', 'instagram_link', 'facebook_link')}),
+         ('Informações de Contato', {'fields': ('owner', 'employees', 'name', 'phone', 'instagram_link', 'facebook_link')}),
          ('Informações de Endereço', {'fields': ('cep', 'state', 'city', 'neighborhood', 'street')}),
          ('Horário', {'fields': ('opening_hours',)}),
                  )
 
-    #list_display = ['id', 'name']
-    #search_fields = ['name']
+    filter_horizontal = ['owner', 'employees']
 
 
 class SchedulesAdmin(admin.ModelAdmin):

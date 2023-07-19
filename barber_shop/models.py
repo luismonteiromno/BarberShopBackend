@@ -18,7 +18,8 @@ class Company(models.Model):
         ('sab', 'Sábado'),
         ('dom', 'Domingo'),
     ]
-    owner = models.ForeignKey('users.UserProfile', verbose_name='Dono(a)', related_name='owner_barber', null=True, on_delete=models.CASCADE)
+    owner = models.ManyToManyField('users.UserProfile', verbose_name='Dono(a)', related_name='owner_barber')
+    employees = models.ManyToManyField('users.UserProfile', verbose_name='Funcionários', related_name='employees_barber')
     name = models.CharField("Nome da Barbearia", max_length=155, null=False, blank=False)
     phone = models.CharField("Telefone", max_length=15)
     cep = models.CharField("Cep", max_length=12,)
