@@ -19,7 +19,7 @@ class Company(models.Model):
         ('dom', 'Domingo'),
     ]
     owner = models.ManyToManyField('users.UserProfile', verbose_name='Dono(a)', related_name='owner_barber')
-    employees = models.ManyToManyField('users.UserProfile', verbose_name='Funcionários', related_name='employees_barber')
+    employees = models.ManyToManyField('users.UserProfile', verbose_name='Funcionários', related_name='employees_barber', blank=True, null=True)
     name = models.CharField("Nome da Barbearia", max_length=155, null=False, blank=False)
     phone = models.CharField("Telefone", max_length=15)
     cep = models.CharField("Cep", max_length=12,)
