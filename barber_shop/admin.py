@@ -13,8 +13,7 @@ class CompanyAdmin(admin.ModelAdmin):
 
 
 class SchedulesAdmin(admin.ModelAdmin):
-    list_display = ['client', 'date', 'confirmed_by_barber']
-    readonly_fields = ['date']
+    list_display = ['client', 'chosen_barber', 'date', 'confirmed_by_barber']
 
 
 admin.site.register(Company, CompanyAdmin)
