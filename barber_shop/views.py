@@ -46,3 +46,14 @@ class CompanysViewSet(ModelViewSet):
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def companys_by_user(self, request):
+        user = request.user
+        try:
+            companys_user = Company.objects.filter(owner=user)
+            serializer = CompanysSerializers(companys_user, many=True)
+            return Response({'message': 'Sucesso', 'companys_user': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'message': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
