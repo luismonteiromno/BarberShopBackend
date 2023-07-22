@@ -7,6 +7,8 @@ from rest_framework.decorators import action
 from django.core.exceptions import ObjectDoesNotExist
 import sentry_sdk
 
+from datetime import datetime
+
 from .serializers import CompanysSerializers, SchedulesSerializer
 from .models import Company, Schedules
 
@@ -27,7 +29,6 @@ class CompanysViewSet(ModelViewSet):
                 business_hours.append(business_hour)
 
             company = Company.objects.create(
-                owner_id=user.id,
                 name=data['name'],
                 phone=data['phone'],
                 cep=data['cep'],
@@ -40,6 +41,7 @@ class CompanysViewSet(ModelViewSet):
                 business_hours=business_hours
 
             )
+            company.owner.add(user.id)
             return Response({'message': 'Barbearia Cadastrada.'}, status=status.HTTP_200_OK)
         except Exception as error:
             sentry_sdk.capture_exception(error)
@@ -57,7 +59,6 @@ class CompanysViewSet(ModelViewSet):
                 business_hours.append(business_hour)
 
             company = Company.objects.get(id=data['company_id'])
-            company.owner_id = user.id
             company.name = data['name']
             company.phone = data['phone']
             company.cep = data['cep']
@@ -123,9 +124,11 @@ class SchedulesViewset(ModelViewSet):
         user = request.user
         data = request.data
         try:
+            data_str = data['date']
+            data_obj = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
             Schedules.objects.create(
                 client_id=user.id,
-                date=data['date'],
+                date=data_obj,
                 chosen_barber_id=data['chosen_barber_id'],
                 confirmed_by_barber=data['confirmed_by_barber']
             )
@@ -139,9 +142,11 @@ class SchedulesViewset(ModelViewSet):
         user = request.user
         data = request.data
         try:
+            data_str = data['date']
+            data_obj = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
             schedule = Schedules.objects.get(id=data['schedule_id'])
             schedule.client_id = user.id
-            schedule.date = data['date']
+            schedule.date = data_obj
             schedule.chosen_barber_id = data['chosen_barber_id']
             schedule.confirmed_by_barber = data['confirmed_by_barber']
             schedule.save()
@@ -161,3 +166,14 @@ class SchedulesViewset(ModelViewSet):
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao listar agendamentos'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def schedule_by_id(self, request):
+        params = request.query_params
+        try:
+            schedule = Schedules.objects.get(pk=params['schedule_id'])
+            serializer = SchedulesSerializer(schedule)
+            return Response({'message': 'Agendamento encontrado', 'schedule': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'message': 'Erro ao listar agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
