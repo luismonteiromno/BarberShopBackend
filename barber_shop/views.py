@@ -161,7 +161,8 @@ class SchedulesViewset(ModelViewSet):
     @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
     def list_all_schedules(self, request):
         try:
-            schedules = Schedules.objects.all()
+            now = datetime.now()
+            schedules = Schedules.objects.all().exclude(date__lt=now)
             serializer = SchedulesSerializer(schedules, many=True)
             return Response({'message': 'Sucesso', 'schedules': serializer.data}, status=status.HTTP_200_OK)
         except Exception as error:
@@ -172,7 +173,8 @@ class SchedulesViewset(ModelViewSet):
     def schedule_by_id(self, request):
         params = request.query_params
         try:
-            schedule = Schedules.objects.get(pk=params['schedule_id'])
+            now = datetime.now()
+            schedule = Schedules.objects.get(pk=params['schedule_id']).exclued(date__lt=now)
             serializer = SchedulesSerializer(schedule)
             return Response({'message': 'Agendamento encontrado', 'schedule': serializer.data}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
@@ -185,7 +187,8 @@ class SchedulesViewset(ModelViewSet):
     def schedule_by_user(self, request):
         user = request.user
         try:
-            schedules = Schedules.objects.filter(chosen_barber_id=user.id)
+            now = datetime.now()
+            schedules = Schedules.objects.filter(chosen_barber_id=user.id).exclude(date__lt=now)
             serializer = SchedulesSerializer(schedules, many=True)
             return Response({'message': 'Cortes agendados para você', 'schedules': serializer.data})
         except Exception as error:
@@ -198,8 +201,8 @@ class SchedulesViewset(ModelViewSet):
         try:
             schedule = Schedules.objects.get(id=data['id'])
             schedule.confirmed_by_barber = data['confirmed_by_barber']
-
-            return Response({'message': 'Sucesso'}, status=status.HTTP_200_OK)
+            schedule.save()
+            return Response({'message': 'Agendamento confirmado/cancelado com sucesso'}, status=status.HTTP_200_OK)
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao confirmar o agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
