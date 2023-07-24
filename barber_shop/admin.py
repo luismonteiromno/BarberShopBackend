@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Company, Schedules
+from django import forms
 
 
 class CompanyAdmin(admin.ModelAdmin):
@@ -12,8 +13,22 @@ class CompanyAdmin(admin.ModelAdmin):
     filter_horizontal = ['owner', 'employees']
 
 
+class FormSchedules(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(FormSchedules, self).__init__(*args, **kwargs)
+
+        request = self.Meta.formfield_callback.keywords['request']
+        user = request.user
+        if user.type == 'barbeiro':
+            self.fields['confirmed_by_barber'].disabled = False
+        else:
+            self.fields['confirmed_by_barber'].disabled = True
+
+
 class SchedulesAdmin(admin.ModelAdmin):
     list_display = ['client', 'chosen_barber', 'date', 'confirmed_by_barber']
+    list_filter = ['confirmed_by_barber']
+    form = FormSchedules
 
 
 admin.site.register(Company, CompanyAdmin)
