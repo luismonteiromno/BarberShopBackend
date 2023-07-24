@@ -5,7 +5,8 @@ from barber_shop.models import Company
 # Create your models here.
 TYPE_USER = (
     ('cliente', 'Cliente'),
-    ('barbeiro', 'Barbeiro')
+    ('barbeiro', 'Barbeiro'),
+    ('desenvolvedor_dono', 'Desenvolvedor dono')
 )
 
 
