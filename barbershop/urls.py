@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from admin_notification.views import check_notification_view
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -27,5 +28,6 @@ admin.site.site_title = 'Barbershop'
 urlpatterns = [
     path('api/', include(router.urls)),
     path('admin/', admin.site.urls),
+    path('check/notification', check_notification_view, name="check_notifications"),
 ]
 urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

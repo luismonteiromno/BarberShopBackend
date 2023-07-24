@@ -47,6 +47,7 @@ sentry_sdk.init(
 # Application definition
 
 INSTALLED_APPS = [
+    'admin_notification',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,6 +60,11 @@ INSTALLED_APPS = [
     'barber_shop',
     'about_us'
 ]
+
+NOTIFICATION_MODEL = 'barber_shop.Schedules'
+
+ADMIN_SITE_BASE_URL = 'admin/'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
