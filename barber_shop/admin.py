@@ -1,6 +1,10 @@
 from django.contrib import admin
 from .models import Company, Schedules
 from django import forms
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse
+from django.template import loader
+from xhtml2pdf import pisa
 
 
 class CompanyAdmin(admin.ModelAdmin):
@@ -29,6 +33,26 @@ class SchedulesAdmin(admin.ModelAdmin):
     list_display = ['client', 'chosen_barber', 'date', 'confirmed_by_barber']
     list_filter = ['confirmed_by_barber']
     form = FormSchedules
+    actions = ['export_as_pdf']
+
+    @admin.action(description='Exportar Selecionados para PDF')
+    def export_as_pdf(self, obj, queryset):
+        context = {
+            "schedules": queryset
+        }
+
+        response = HttpResponse(content_type='schedules/pdf')
+        response['Content-Disposition'] = 'attachment; filename="schedules.pdf"'
+
+        template = loader.get_template('schedules.html')
+        html = template.render(context)
+
+        create_pdf = pisa.CreatePDF(html, dest=response)
+
+        if create_pdf.err:
+            raise ValidationError("Problema ao gerar PDF")
+
+        return response
 
 
 admin.site.register(Company, CompanyAdmin)

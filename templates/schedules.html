@@ -1,0 +1,119 @@
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .header {
+                background-color: #a9d08e;
+                color: #000000;
+            }
+
+            .table-rg {
+                margin-left: 40em;
+                background-color: #a9d08e;
+                width: 100px;
+                color: #000000;
+                border: 1px solid black;
+            }
+
+            .header-rg {
+                background-color: #fff;
+                text-align: left;
+                font-size: 90%;
+                color: #000000;
+                weigth: 100%;
+                padding: 15px;
+            }
+
+            .text {
+                font-size: 17px;
+                weigth: 100%;
+                heigth: 50%;
+                padding: 8px;
+            }
+
+            .align {
+                text-align: center;
+                color: #000000;
+                background-color: #e1efdb;
+                margin: 5px;
+                font-size: 80%;
+                weigth: 100%;
+                heigth: 50%;
+                padding: 8px;
+            }
+
+            .info {
+                font-size: 70%;
+                text-align: center;
+                weigth: 100%;
+                heigth: 50%;
+                padding: 8px;
+            }
+
+           table {
+                -pdf-keep-with-next: true;
+            }
+
+            @page {
+                size: a4 portrait;
+
+                @frame header_frame {
+                    -pdf-frame-content: header_content;
+                    left: 50pt;
+                    width: 512pt;
+                    height: 60pt;
+                }
+
+                @frame content_frame {
+                    left: 38pt;
+                    width: 512pt;
+                    height: 632pt;
+                }
+
+                @frame footer_frame {
+                    -pdf-frame-content: footer_content;
+                    left: 50pt;
+                    width: 512pt;
+                    top: 808pt;
+                    height: 20pt;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <br><br><br>
+        <div style="display: flex; justify-content: space-between;">
+            {% for schedule in schedules %}
+            <table style="width: 250%; border: 1px solid black; padding: 20px;">
+                <thead>
+                    <tr class="text">
+                        <th class="header" colspan="4">Agendamentos</th>
+                    </tr>
+                    <tr class="text">
+                        <td class="align">Cliente</td>
+                        <td class="align">Data</td>
+                        <td class="align">Barbeiro escolhido</td>
+                        <td class="align">Agendamento confirmado pelo barbeiro?</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="text">
+                        <td class="info">{{schedule.client}}</td>
+                        <td class="info">{{schedule.date}}</td>
+                        <td class="info">{{schedule.chosen_barber}} </td>
+                        <td class="info">{{schedule.confirmed_by_barber}} </td>
+                    </tr>
+                </tbody>
+            </table>
+            {% endfor %}
+        </div>
+
+        <div id="footer_content">Página <pdf:pagenumber>
+                de <pdf:pagecount>
+        </div>
+    </body>
+</html>
