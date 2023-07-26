@@ -184,7 +184,6 @@ class SchedulesViewset(ModelViewSet):
     def schedule_by_id(self, request):
         params = request.query_params
         try:
-            now = datetime.now()
             schedule = Schedules.objects.get(pk=params['schedule_id'])
             serializer = SchedulesSerializer(schedule)
             return Response({'message': 'Agendamento encontrado', 'schedule': serializer.data}, status=status.HTTP_200_OK)
@@ -205,6 +204,18 @@ class SchedulesViewset(ModelViewSet):
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao listar seus agendamentos'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def schedules_status(self, request):
+        params = request.query_params
+        try:
+            now = datetime.now()
+            schedule = Schedules.objects.filter(confirmed_by_barber=params['confirmed_by_barber']).exclude(date__lt=now)
+            serializer = SchedulesSerializer(schedule, many=True)
+            return Response({'message': 'Agendamentos encontrados', 'schedules': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as error:
+            print(error)
+            return Response({'message': 'Erro ao listar agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['PATCH'], permission_classes=[PermissionBarber])
     def accept_schedule(self, request):
