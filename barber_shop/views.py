@@ -214,7 +214,7 @@ class SchedulesViewset(ModelViewSet):
             serializer = SchedulesSerializer(schedule, many=True)
             return Response({'message': 'Agendamentos encontrados', 'schedules': serializer.data}, status=status.HTTP_200_OK)
         except Exception as error:
-            print(error)
+            sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao listar agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['PATCH'], permission_classes=[PermissionBarber])
