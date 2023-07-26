@@ -185,7 +185,7 @@ class SchedulesViewset(ModelViewSet):
         params = request.query_params
         try:
             now = datetime.now()
-            schedule = Schedules.objects.get(pk=params['schedule_id']).exclued(date__lt=now)
+            schedule = Schedules.objects.get(pk=params['schedule_id'])
             serializer = SchedulesSerializer(schedule)
             return Response({'message': 'Agendamento encontrado', 'schedule': serializer.data}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
@@ -213,7 +213,20 @@ class SchedulesViewset(ModelViewSet):
             schedule = Schedules.objects.get(id=data['id'])
             schedule.confirmed_by_barber = data['confirmed_by_barber']
             schedule.save()
-            return Response({'message': 'Agendamento confirmado/cancelado com sucesso'}, status=status.HTTP_200_OK)
+
+            if data['confirmed_by_barber'] == True:
+                date_str = datetime.strftime(schedule.date, '%d/%m/%Y às %H:%M')
+                subject = 'BarberShop'
+                message = f'O barbeiro {schedule.chosen_barber} confirmou seu agendamento para o dia {date_str}'
+                send_email(schedule.client, subject, message)
+                return Response({'message': 'Agendamento confirmado com sucesso'}, status=status.HTTP_200_OK)
+            else:
+                date_str = datetime.strftime(schedule.date, '%d/%m/%Y às %H:%M')
+                subject = 'BarberShop'
+                message = f'O barbeiro {schedule.chosen_barber} infelizmente cancelou seu agendamento para o dia {date_str}'
+                send_email(schedule.client, subject, message)
+                return Response({'message': 'Agendamento cancelado com sucesso'}, status=status.HTTP_200_OK)
+
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao confirmar o agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
