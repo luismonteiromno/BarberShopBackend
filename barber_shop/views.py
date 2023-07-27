@@ -229,13 +229,13 @@ class SchedulesViewset(ModelViewSet):
                 date_str = datetime.strftime(schedule.date, '%d/%m/%Y às %H:%M')
                 subject = 'BarberShop'
                 message = f'O barbeiro {schedule.chosen_barber} confirmou seu agendamento para o dia {date_str}'
-                send_email(schedule.client, subject, message)
+                send_email(schedule.client.email, subject, message)
                 return Response({'message': 'Agendamento confirmado com sucesso'}, status=status.HTTP_200_OK)
             else:
                 date_str = datetime.strftime(schedule.date, '%d/%m/%Y às %H:%M')
                 subject = 'BarberShop'
                 message = f'O barbeiro {schedule.chosen_barber} infelizmente cancelou seu agendamento para o dia {date_str}'
-                send_email(schedule.client, subject, message)
+                send_email(schedule.client.email, subject, message)
                 return Response({'message': 'Agendamento cancelado com sucesso'}, status=status.HTTP_200_OK)
 
         except Exception as error:
