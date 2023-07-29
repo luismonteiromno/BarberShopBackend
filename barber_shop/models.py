@@ -52,3 +52,13 @@ class Schedules(models.Model):
     class Meta:
         verbose_name = 'Agendamento'
         verbose_name_plural = 'Agendamentos'
+
+
+class Days(models.Model):
+    day = models.CharField('Dia', max_length=50)
+    hours_business = models.DateTimeField('Horário de Funcionamento', null=True, auto_created=True)
+    company = models.ForeignKey(Company, verbose_name='Barbearia', related_name='company_dat', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Dia'
+        verbose_name_plural = 'Dias'
