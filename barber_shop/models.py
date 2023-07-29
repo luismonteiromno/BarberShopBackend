@@ -27,8 +27,9 @@ class Company(models.Model):
     neighborhood = models.CharField("Bairro", max_length=60)
     state = models.CharField("Estado", max_length=60, default="")
     street = models.CharField("Rua e número", max_length=150)
-    instagram_link = models.URLField("Link do instagram", max_length=250)
-    facebook_link = models.URLField("Link do facebook", max_length=250)
+    instagram_link = models.URLField("Link do instagram", max_length=250, blank=True, null=True)
+    facebook_link = models.URLField("Link do facebook", max_length=250, blank=True, null=True)
+    whatsapp_link = models.URLField('Link do Whatsapp', max_length=250, blank=True, null=True)
     business_hours = JSONField(blank=True, null=True, verbose_name='Horário de Funcionamento')
     opening_hours = ArrayField(models.CharField(max_length=255), null=True, verbose_name='Horário de Funcionamento')
 
