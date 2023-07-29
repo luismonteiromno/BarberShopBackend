@@ -56,7 +56,7 @@ class Schedules(models.Model):
 
 class Days(models.Model):
     day = models.CharField('Dia', max_length=50)
-    hours_business = models.DateTimeField('Horário de Funcionamento', null=True, auto_created=True)
+    hours_business = models.TimeField('Horário de Funcionamento', null=True, auto_created=True)
     company = models.ForeignKey(Company, verbose_name='Barbearia', related_name='company_dat', on_delete=models.CASCADE)
 
     class Meta:
