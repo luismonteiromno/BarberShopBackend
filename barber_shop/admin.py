@@ -31,8 +31,10 @@ class FormSchedules(forms.ModelForm):
         user = request.user
         if user.type == 'barbeiro' or user.type == 'desenvolvedor_dono':
             self.fields['confirmed_by_barber'].disabled = False
+            self.fields['date'].disabled = False
         else:
             self.fields['confirmed_by_barber'].disabled = True
+            self.fields['date'].disabled = True
 
 
 class SchedulesAdmin(admin.ModelAdmin):
