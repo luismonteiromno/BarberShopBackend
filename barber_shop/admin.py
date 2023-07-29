@@ -16,7 +16,6 @@ class CompanyAdmin(admin.ModelAdmin):
     fieldsets = (
          ('Informações de Contato', {'fields': ('owner', 'employees', 'name', 'phone', 'instagram_link', 'facebook_link')}),
          ('Informações de Endereço', {'fields': ('cep', 'state', 'city', 'neighborhood', 'street')}),
-         ('Horário', {'fields': ('opening_hours',)}),
                  )
     inlines = [
         DaysInline
