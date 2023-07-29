@@ -14,7 +14,8 @@ class DaysInline(admin.TabularInline):
 
 class CompanyAdmin(admin.ModelAdmin):
     fieldsets = (
-         ('Informações de Contato', {'fields': ('owner', 'employees', 'name', 'phone', 'instagram_link', 'facebook_link')}),
+         ('Informações de Contato', {'fields': ('owner', 'employees', 'name', 'phone', 'instagram_link', 'facebook_link'
+                                                , 'whatsapp_link')}),
          ('Informações de Endereço', {'fields': ('cep', 'state', 'city', 'neighborhood', 'street')}),
                  )
     inlines = [
