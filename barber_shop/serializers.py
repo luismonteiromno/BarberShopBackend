@@ -18,5 +18,6 @@ class SchedulesSerializer(serializers.ModelSerializer):
 
 class DaysSerializers(serializers.ModelSerializer):
     class Meta:
+        Depth = 1
         model = Days
         fields = '__all__'
