@@ -59,6 +59,7 @@ class Days(models.Model):
     day = models.CharField('Dia', max_length=50)
     start = models.TimeField('Horário de inicio', null=True, auto_created=True)
     end = models.TimeField('Horário de encerramento', null=True, auto_created=True)
+    pause_time = models.TimeField('Horário de pausa', blank=True, null=True, help_text='opcional')
     company = models.ForeignKey(Company, verbose_name='Barbearia', related_name='company_dat', on_delete=models.CASCADE)
 
     class Meta:
