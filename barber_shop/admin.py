@@ -7,9 +7,9 @@ from django.template import loader
 from xhtml2pdf import pisa
 
 
-class DaysInline(admin.TabularInline):
+class DaysInline(admin.StackedInline):
     model = Days
-    fields = ['day', 'start', 'end']
+    fields = ['day', 'start', 'end', 'pause_time']
 
 
 class CompanyAdmin(admin.ModelAdmin):
