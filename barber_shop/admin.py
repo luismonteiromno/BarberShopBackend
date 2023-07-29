@@ -9,14 +9,13 @@ from xhtml2pdf import pisa
 
 class DaysInline(admin.TabularInline):
     model = Days
-    fields = ['day', 'hours_business',]
+    fields = ['day', 'hours_business']
 
 
 class CompanyAdmin(admin.ModelAdmin):
     fieldsets = (
          ('Informações de Contato', {'fields': ('owner', 'employees', 'name', 'phone', 'instagram_link', 'facebook_link')}),
          ('Informações de Endereço', {'fields': ('cep', 'state', 'city', 'neighborhood', 'street')}),
-         ('Horário', {'fields': ('opening_hours',)}),
                  )
     inlines = [
         DaysInline

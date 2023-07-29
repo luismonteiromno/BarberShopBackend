@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, Schedules
+from .models import Company, Schedules, Days
 
 
 class CompanysSerializers(serializers.ModelSerializer):
@@ -13,4 +13,10 @@ class SchedulesSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
         model = Schedules
+        fields = '__all__'
+
+
+class DaysSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Days
         fields = '__all__'

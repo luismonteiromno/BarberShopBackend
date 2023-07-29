@@ -14,8 +14,8 @@ from utils import send_email
 
 from barbershop.permissions import PermissionBarber
 from users.models import UserProfile
-from .serializers import CompanysSerializers, SchedulesSerializer
-from .models import Company, Schedules
+from .serializers import CompanysSerializers, SchedulesSerializer, DaysSerializers
+from .models import Company, Schedules, Days
 
 
 class CompanysViewSet(ModelViewSet):
@@ -117,6 +117,20 @@ class CompanysViewSet(ModelViewSet):
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao buscar por barbearia'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
+    def list_days(self, request):
+        params = request.query_params
+        try:
+            barbers = Days.objects.filter(company_id=params['id'])
+            serializers = DaysSerializers(barbers, many=True)
+            return Response({'message': 'Dias funcionamento da encontrados com sucesso', 'days': serializers.data},
+                            status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response({'message': 'Barbearia não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'message': 'Erro ao listar os dias de cada barbearia'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class SchedulesViewset(ModelViewSet):
     queryset = Schedules.objects.all()
