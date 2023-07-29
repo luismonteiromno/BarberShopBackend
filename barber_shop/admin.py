@@ -1,10 +1,15 @@
 from django.contrib import admin
-from .models import Company, Schedules
+from .models import Company, Schedules, Days
 from django import forms
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.template import loader
 from xhtml2pdf import pisa
+
+
+class DaysInline(admin.TabularInline):
+    model = Days
+    fields = ['day', 'hours_business',]
 
 
 class CompanyAdmin(admin.ModelAdmin):
@@ -13,7 +18,9 @@ class CompanyAdmin(admin.ModelAdmin):
          ('Informações de Endereço', {'fields': ('cep', 'state', 'city', 'neighborhood', 'street')}),
          ('Horário', {'fields': ('opening_hours',)}),
                  )
-
+    inlines = [
+        DaysInline
+    ]
     filter_horizontal = ['owner', 'employees']
 
 
