@@ -9,7 +9,7 @@ from xhtml2pdf import pisa
 
 class DaysInline(admin.TabularInline):
     model = Days
-    fields = ['day', 'hours_business',]
+    fields = ['day', 'hours_business']
 
 
 class CompanyAdmin(admin.ModelAdmin):
