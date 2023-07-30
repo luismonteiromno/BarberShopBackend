@@ -64,4 +64,4 @@ class Days(models.Model):
 
     class Meta:
         verbose_name = 'Dia'
-        verbose_name_plural = 'Dias'
+        verbose_name_plural = 'Dias de Funcionamento'
