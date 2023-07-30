@@ -117,7 +117,7 @@ class CompanysViewSet(ModelViewSet):
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao buscar por barbearia'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['POST'], permission_classes=[AllowAny])
+    @action(detail=False, methods=['POST'], permission_classes=[PermissionBarber])
     def create_business_day(self, request):
         data = request.data
         try:
@@ -138,6 +138,30 @@ class CompanysViewSet(ModelViewSet):
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao registrar dia!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['PATCH'], permission_classes=[PermissionBarber])
+    def update_business_day(self, request):
+        data = request.data
+        try:
+            data_str = data['start']
+            data_obj = datetime.strptime(data_str, '%H:%M')
+            data_end = data['end']
+            data_str_end = datetime.strptime(data_end, '%H:%M')
+            data_pause = data['pause_time']
+            data_str_pause = datetime.strptime(data_pause, '%H:%M')
+            day = Days.objects.get(pk=data['day_id'])
+            day.company_id = data['company_id']
+            day.day = data['day']
+            day.start = data_obj
+            day.end = data_str_end
+            day.pause_time = data_str_pause
+            day.save()
+            return Response({'message': 'Dia atualizado com sucesso'}, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response({'message': 'Dia não encontrado!'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as error:
+            print(error)
+            return Response({'message': 'Erro ao atualizar dia!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
     def list_days(self, request):
