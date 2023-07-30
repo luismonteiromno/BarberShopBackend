@@ -160,7 +160,7 @@ class CompanysViewSet(ModelViewSet):
         except ObjectDoesNotExist:
             return Response({'message': 'Dia não encontrado!'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
-            print(error)
+            sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao atualizar dia!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
