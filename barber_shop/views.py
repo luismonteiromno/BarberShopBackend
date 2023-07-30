@@ -117,6 +117,28 @@ class CompanysViewSet(ModelViewSet):
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao buscar por barbearia'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['POST'], permission_classes=[AllowAny])
+    def create_business_day(self, request):
+        data = request.data
+        try:
+            data_str = data['start']
+            data_obj = datetime.strptime(data_str, '%H:%M')
+            data_end = data['end']
+            data_str_end = datetime.strptime(data_end, '%H:%M')
+            data_pause = data['pause_time']
+            data_str_pause = datetime.strptime(data_pause, '%H:%M')
+            Days.objects.create(
+                company_id=data['id'],
+                day=data['day'],
+                start=data_obj,
+                end=data_str_end,
+                pause_time=data_str_pause
+            )
+            return Response({'message': 'Dia registrado com sucesso'}, status=status.HTTP_200_OK)
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'message': 'Erro ao registrar dia!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
     def list_days(self, request):
         params = request.query_params
