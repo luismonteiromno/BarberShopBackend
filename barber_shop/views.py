@@ -168,7 +168,7 @@ class CompanysViewSet(ModelViewSet):
         try:
             barbers = Days.objects.filter(company_id=params['id'])
             serializers = DaysSerializers(barbers, many=True)
-            return Response({'message': 'Dias funcionamento da encontrados com sucesso', 'days': serializers.data},
+            return Response({'message': 'Dias de funcionamento da barbearia encontrados com sucesso', 'days': serializers.data},
                             status=status.HTTP_200_OK)
         except Exception as error:
             sentry_sdk.capture_exception(error)
