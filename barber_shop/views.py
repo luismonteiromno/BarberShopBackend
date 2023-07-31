@@ -54,7 +54,6 @@ class CompanysViewSet(ModelViewSet):
 
     @action(detail=False, methods=['PATCH'], permission_classes=[IsAuthenticated])
     def update_company(self, request):
-        user = request.user
         data = request.data
         try:
             business_hours_array = data['business_hours']
@@ -171,12 +170,11 @@ class CompanysViewSet(ModelViewSet):
             serializers = DaysSerializers(barbers, many=True)
             return Response({'message': 'Dias funcionamento da encontrados com sucesso', 'days': serializers.data},
                             status=status.HTTP_200_OK)
-        except ObjectDoesNotExist:
-            return Response({'message': 'Barbearia não encontrada'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao listar os dias de cada barbearia'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class SchedulesViewset(ModelViewSet):
     queryset = Schedules.objects.all()
