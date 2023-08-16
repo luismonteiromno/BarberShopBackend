@@ -389,11 +389,11 @@ class SchedulesViewset(ModelViewSet):
             available_times_today = get_available_times_for_day(day, today)
 
             available_times_all_days = []
-            current_date = today
+            current_date = today + timedelta(days=1)
             while current_date <= end_date:
                 available_times = get_available_times_for_day(day, current_date)
                 available_times_all_days.append(
-                    {'date': current_date.strftime('%Y-%m-%d'), 'times': available_times}
+                    {'future_date': current_date.strftime('%Y-%m-%d'), 'times': available_times}
                 )
                 current_date += timedelta(days=1)
 
