@@ -7,9 +7,9 @@ from rest_framework.authtoken.models import Token
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 
-
 from users.models import UserProfile
 from users.serializers import UserSerializer
+
 
 class UserViewset(ModelViewSet):
     queryset = UserProfile.objects.all()
@@ -27,26 +27,22 @@ class UserViewset(ModelViewSet):
             first_name = data['full_name'].split(' ', 1)[0]
 
             user = UserProfile.objects.create(
-                username = first_name,
-                full_name = data['full_name'],
-                email = data['email'],
-                token_google = data['token_google']
+                username=first_name,
+                full_name=data['full_name'],
+                email=data['email'],
+                token_google=data['token_google']
             )
 
             user.set_password(data['password'])
             user.save()
-            print(user)
             token = Token.objects.create(user=user)
-            # token = Token.objects.create(user=users)
-
-            #UserViewSet.send_email_confirm_user(user, request)
             return Response({'message': 'Usuário Cadastrado.'}, status=status.HTTP_200_OK)
             # return Response({'msg': 'Usuário Cadastrado.', 'token': user.auth_token.key, 'user': serializer.data}, status=status.HTTP_200_OK)
         except Exception as error:
             print(error)
-            #sentry_sdk.capture_exception(error)
-            return Response({'message': 'Erro no cadastro de usuário.', 'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            # sentry_sdk.capture_exception(error)
+            return Response({'message': 'Erro no cadastro de usuário.', 'error': str(error)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['DELETE'], permission_classes=[IsAuthenticated])
     def delete_user(self, request):
@@ -63,7 +59,6 @@ class UserViewset(ModelViewSet):
         except Exception as error:
             return Response({'message': 'Nao Foi Possivel Deletar usuario, Entre em Contato com o Suporte.'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
     @action(detail=False, methods=['PATCH'], permission_classes=[IsAuthenticated])
     def update_user(self, request):
