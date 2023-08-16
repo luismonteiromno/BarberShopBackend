@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -8,14 +9,14 @@ from rest_framework.decorators import action
 from django.core.exceptions import ObjectDoesNotExist
 import sentry_sdk
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from utils import send_email
+from utils import send_email, get_available_times_for_day
 
 from barbershop.permissions import PermissionBarber
 from users.models import UserProfile
-from .serializers import CompanysSerializers, SchedulesSerializer, DaysSerializers
-from .models import Company, Schedules, Days
+from .serializers import CompanysSerializers, SchedulesSerializer, DaysSerializer, SchedulesDaysSerializer
+from .models import Company, Schedules, Days, SchedulesDays
 
 
 class CompanysViewSet(ModelViewSet):
@@ -54,6 +55,7 @@ class CompanysViewSet(ModelViewSet):
 
     @action(detail=False, methods=['PATCH'], permission_classes=[IsAuthenticated])
     def update_company(self, request):
+        user = request.user
         data = request.data
         try:
             business_hours_array = data['business_hours']
@@ -116,7 +118,7 @@ class CompanysViewSet(ModelViewSet):
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao buscar por barbearia'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['POST'], permission_classes=[PermissionBarber])
+    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
     def create_business_day(self, request):
         data = request.data
         try:
@@ -124,14 +126,26 @@ class CompanysViewSet(ModelViewSet):
             data_obj = datetime.strptime(data_str, '%H:%M')
             data_end = data['end']
             data_str_end = datetime.strptime(data_end, '%H:%M')
-            data_pause = data['pause_time']
-            data_str_pause = datetime.strptime(data_pause, '%H:%M')
+            data_pause = data.get('pause_time', None)
+            data_end_pause = data.get('end_pause_time', None)
+
+            if data_pause != None and data_end_pause != None:
+                data_str_pause = datetime.strptime(data_pause, '%H:%M')
+                data_str_end_pause = datetime.strptime(data_end_pause, '%H:%M')
+                Days.objects.create(
+                    company_id=data['id'],
+                    day=data['day'],
+                    start=data_obj,
+                    end_time=data_str_end,
+                    pause_time=data_str_pause,
+                    end_pause_time=data_str_end_pause
+                )
+
             Days.objects.create(
                 company_id=data['id'],
                 day=data['day'],
                 start=data_obj,
-                end=data_str_end,
-                pause_time=data_str_pause
+                end_time=data_str_end
             )
             return Response({'message': 'Dia registrado com sucesso'}, status=status.HTTP_200_OK)
         except Exception as error:
@@ -148,12 +162,15 @@ class CompanysViewSet(ModelViewSet):
             data_str_end = datetime.strptime(data_end, '%H:%M')
             data_pause = data['pause_time']
             data_str_pause = datetime.strptime(data_pause, '%H:%M')
+            data_end_pause = data['end_pause_time']
+            data_str_end_pause = datetime.strptime(data_end_pause, '%H:%M')
             day = Days.objects.get(pk=data['day_id'])
             day.company_id = data['company_id']
             day.day = data['day']
             day.start = data_obj
             day.end = data_str_end
             day.pause_time = data_str_pause
+            day.end_pause_time = data_str_end_pause
             day.save()
             return Response({'message': 'Dia atualizado com sucesso'}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
@@ -162,18 +179,16 @@ class CompanysViewSet(ModelViewSet):
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao atualizar dia!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
     def list_days(self, request):
         params = request.query_params
         try:
-            barbers = Days.objects.filter(company_id=params['id'])
-            serializers = DaysSerializers(barbers, many=True)
-            return Response({'message': 'Dias de funcionamento da barbearia encontrados com sucesso', 'days': serializers.data},
-                            status=status.HTTP_200_OK)
+            company_days = Days.objects.filter(company_id=params['company_id'])
+            serializer = DaysSerializer(company_days, many=True)
+            return Response({'message': 'Sucesso', 'company_days': serializer.data}, status=status.HTTP_200_OK)
         except Exception as error:
             sentry_sdk.capture_exception(error)
-            return Response({'message': 'Erro ao listar os dias de cada barbearia'},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'Erro ao buscar por barbearia'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class SchedulesViewset(ModelViewSet):
@@ -185,19 +200,30 @@ class SchedulesViewset(ModelViewSet):
     def schedule_cut(self, request):
         user = request.user
         data = request.data
-        barber_id = data['chosen_barber_id']
         try:
             data_str = data['date']
             data_obj = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
-            Schedules.objects.create(
+
+            schedules_existing = SchedulesDays.objects.filter(data=data_obj).exists()
+            if schedules_existing:
+                return Response({'message': 'já existe um agendamento para este horário!'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            schedule = Schedules.objects.create(
+                barbershop_id=data['barbershop_id'],
                 client_id=user.id,
+                day_id=data['day_id'],
                 date=data_obj,
-                chosen_barber_id=barber_id,
+                chosen_barber_id=data['chosen_barber_id'],
                 confirmed_by_barber=data['confirmed_by_barber']
             )
-
+            SchedulesDays.objects.create(
+                day_id=data['day_id'],
+                schedule_id=schedule.id,
+                data=data_obj
+            )
             date_msg = datetime.strftime(data_obj, '%d/%m/%Y às %H:%M')
-            instance = UserProfile.objects.get(pk=barber_id)
+            instance = UserProfile.objects.get(pk=data['chosen_barber_id'])
             subject = 'BarberShop'
             message = f'O cliente {user} fez um novo agendamento para o dia {date_msg}'
             send_email(instance.email, subject, message)
@@ -216,11 +242,19 @@ class SchedulesViewset(ModelViewSet):
             data_obj = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
             schedule = Schedules.objects.get(id=data['schedule_id'])
             schedule.client_id = user.id
+            schedule.day_id = data['day_id']
             schedule.date = data_obj
             schedule.chosen_barber_id = data['chosen_barber_id']
             schedule.confirmed_by_barber = data['confirmed_by_barber']
             schedule.save()
-            return Response({'message': 'Agendamento feito com sucesso'}, status=status.HTTP_200_OK)
+
+            schedule_day = SchedulesDays.objects.filter()
+            schedule_day.day_id = data['day_id'],
+            schedule_day.schedule_id = schedule.id,
+            schedule_day.data = data_obj
+            schedule_day.save()
+
+            return Response({'message': 'Agendamento atualizado com sucesso'}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({'message': 'Barbearia encontrada'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
@@ -238,13 +272,14 @@ class SchedulesViewset(ModelViewSet):
             sentry_sdk.capture_exception(error)
             return Response({'message': 'Erro ao listar agendamentos'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['GET'], permission_classes=[PermissionBarber])
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
     def schedule_by_id(self, request):
         params = request.query_params
         try:
             schedule = Schedules.objects.get(pk=params['schedule_id'])
             serializer = SchedulesSerializer(schedule)
-            return Response({'message': 'Agendamento encontrado', 'schedule': serializer.data}, status=status.HTTP_200_OK)
+            return Response({'message': 'Agendamento encontrado', 'schedule': serializer.data},
+                            status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({'message': 'Agendamento não encontrado'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
@@ -261,19 +296,38 @@ class SchedulesViewset(ModelViewSet):
             return Response({'message': 'Cortes agendados para você', 'schedules': serializer.data})
         except Exception as error:
             sentry_sdk.capture_exception(error)
-            return Response({'message': 'Erro ao listar seus agendamentos'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'Erro ao listar seus agendamentos'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
-    def schedules_status(self, request):
+    def schedules_days_by_id(self, request):
         params = request.query_params
         try:
             now = datetime.now()
-            schedule = Schedules.objects.filter(confirmed_by_barber=params['confirmed_by_barber']).exclude(date__lt=now)
-            serializer = SchedulesSerializer(schedule, many=True)
-            return Response({'message': 'Agendamentos encontrados', 'schedules': serializer.data}, status=status.HTTP_200_OK)
+            schedules = SchedulesDays.objects.get(id=params['schedule_day_id'], data__gte=now)
+            serializer = SchedulesDaysSerializer(schedules)
+            return Response({'message': 'Cortes agendados até o momento', 'schedules': serializer.data})
+        except ObjectDoesNotExist:
+            return Response({'message': 'Agendamento não encontrado'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
             sentry_sdk.capture_exception(error)
-            return Response({'message': 'Erro ao listar agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'Erro ao listar seus agendamentos'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def all_schedules_days(self, request):
+        params = request.query_params
+        try:
+            now = datetime.now()
+            schedules = SchedulesDays.objects.filter(
+                schedule__barbershop__id=params['company_id']
+            ).exclude(data__lt=now).order_by('data')
+            serializer = SchedulesDaysSerializer(schedules, many=True)
+            return Response({'message': 'Cortes agendados até o momento', 'schedules': serializer.data})
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'message': 'Erro ao listar seus agendamentos'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['PATCH'], permission_classes=[PermissionBarber])
     def accept_schedule(self, request):
@@ -286,7 +340,7 @@ class SchedulesViewset(ModelViewSet):
             if data['confirmed_by_barber'] == True:
                 date_str = datetime.strftime(schedule.date, '%d/%m/%Y às %H:%M')
                 subject = 'BarberShop'
-                message = f'O barbeiro {schedule.chosen_barber} confirmou seu agendamento para o dia {date_str}'
+                message = f'O barbeiro {schedule.chosen_barber} confirmou o seu agendamento para o dia {date_str}'
                 send_email(schedule.client.email, subject, message)
                 return Response({'message': 'Agendamento confirmado com sucesso'}, status=status.HTTP_200_OK)
             else:
@@ -295,7 +349,63 @@ class SchedulesViewset(ModelViewSet):
                 message = f'O barbeiro {schedule.chosen_barber} infelizmente cancelou seu agendamento para o dia {date_str}'
                 send_email(schedule.client.email, subject, message)
                 return Response({'message': 'Agendamento cancelado com sucesso'}, status=status.HTTP_200_OK)
-
         except Exception as error:
             sentry_sdk.capture_exception(error)
-            return Response({'message': 'Erro ao confirmar o agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'Erro ao confirmar o agendamento'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['PUT'], permission_classes=[IsAuthenticated])
+    def canceled_by_user(self, request):
+        data = request.data
+        user = request.user
+        try:
+            schedule = Schedules.objects.get(pk=data['schedule_id'])
+            schedule.user_canceled = data['user_canceled']
+
+            if user != schedule.client:
+                return Response({'message': 'Apenas o próprio usuário pode cancelar este agendamento'},
+                                status=status.HTTP_401_UNAUTHORIZED)
+
+            if data['user_canceled'] == False:
+                return Response({'message': 'Voce não pode fazer está ação, tente remarcar um novo um agendamento'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            schedule.save()
+            return Response({'message': 'Cancelamento feito com sucesso'}, status=status.HTTP_200_OK)
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'Response': 'Erro ao cancelar seu agendamento'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def available_times(self, request):
+        params = request.query_params
+        day_id = params['day_id']
+        try:
+            day = Days.objects.filter(company__id=day_id).first()
+
+            today = datetime.now()
+            end_date = today + timedelta(days=15)
+
+            available_times_today = get_available_times_for_day(day, today)
+
+            available_times_all_days = []
+            current_date = today
+            while current_date <= end_date:
+                available_times = get_available_times_for_day(day, current_date)
+                available_times_all_days.append(
+                    {'date': current_date.strftime('%Y-%m-%d'), 'times': available_times}
+                )
+                current_date += timedelta(days=1)
+
+            return Response(
+                {
+                    'message': 'Horários disponíveis',
+                    'available_times_today': available_times_today,
+                    'available_times_all_days': available_times_all_days
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as error:
+            sentry_sdk.capture_exception(error)
+            return Response({'message': 'Erro ao listar horários disponíveis do dia'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
