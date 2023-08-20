@@ -30,7 +30,7 @@ def send_email(email, subject, body):
         server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
 
         # send the message via the server.
-        server.sendmail(msg['From'], msg['To'], msg.as_string ())
+        server.sendmail(msg['From'], msg['To'], msg.as_string())
 
         server.quit()
 
@@ -43,7 +43,7 @@ def send_email(email, subject, body):
 
 def get_available_times_for_day(day, date):
     working_start = datetime.combine(date, day.start)
-    working_end = datetime.combine(date, day.end_time)
+    working_end = datetime.combine(date, day.end)
     pause_start = datetime.combine(date, day.pause_time) if day.pause_time else None
     pause_end = datetime.combine(date, day.end_pause_time) if day.end_pause_time else None
 
