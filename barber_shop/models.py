@@ -47,6 +47,7 @@ class Days(models.Model):
     end = models.TimeField('Horário de encerramento', null=True, auto_created=True)
     pause_time = models.TimeField('Horário de pausa', blank=True, null=True, help_text='(opcional)')
     end_pause_time = models.TimeField('Fim da pausa', blank=True, null=True, help_text='(opcional)')
+    working_day = models.BooleanField('Dia de funcionamento', default=True)
     company = models.ForeignKey(Company, verbose_name='Barbearia', null=True, blank=True, related_name='company_dat', on_delete=models.CASCADE)
 
     def __str__(self):
