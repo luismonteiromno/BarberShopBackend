@@ -52,7 +52,6 @@ def get_available_times_for_day(day, date):
     current_time = working_start
     time_interval = timedelta(hours=1)
 
-
     while current_time.time() < working_end.time():
         is_within_pause = (
                 pause_start and pause_end and
