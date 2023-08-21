@@ -91,7 +91,6 @@ class UserViewset(ModelViewSet):
 
     @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
     def list_users(self, request):
-        user = request.user
         try:
             user = UserProfile.objects.all()
             serializer = UserSerializer(user, many=True)
