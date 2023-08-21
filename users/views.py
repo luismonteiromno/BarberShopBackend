@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db.models import Q
 from rest_framework import status, viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action, api_view, permission_classes
@@ -75,3 +76,27 @@ class UserViewset(ModelViewSet):
         except Exception as error:
             print(error)
             return Response({'message': 'Erro ao atualizar o usuário!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def get_user(self, request):
+        user = request.user
+        try:
+            user = UserProfile.objects.get(id=user.id)
+            serializer = UserSerializer(user)
+            return Response({'message': 'Usuário encontrado', 'user': serializer.data},
+                            status=status.HTTP_200_OK)
+        except Exception as error:
+            return Response({'message': 'Nao Foi Possivel Deletar usuario, Entre em Contato com o Suporte.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
+    def list_users(self, request):
+        user = request.user
+        try:
+            user = UserProfile.objects.all()
+            serializer = UserSerializer(user, many=True)
+            return Response({'message': 'Usuários encontrados', 'user': serializer.data},
+                            status=status.HTTP_200_OK)
+        except Exception as error:
+            return Response({'message': 'Nao Foi Possivel Deletar usuario, Entre em Contato com o Suporte.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
